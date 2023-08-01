@@ -1,5 +1,33 @@
 # Change Log
 
+## 2.0.0-next.1
+
+### Patch Changes
+
+- [#1206](https://github.com/latticexyz/mud/pull/1206) [`e259ef79`](https://github.com/latticexyz/mud/commit/e259ef79f4d9026353176d0f74628cae50c2f69b) Thanks [@holic](https://github.com/holic)! - Generated `contractComponents` now properly import `World` as type
+
+- [#1195](https://github.com/latticexyz/mud/pull/1195) [`afdba793`](https://github.com/latticexyz/mud/commit/afdba793fd84abf17eef5ef59dd56fabe353c8bd) Thanks [@holic](https://github.com/holic)! - Update RECS components with v2 key/value schemas. This helps with encoding/decoding composite keys and strong types for keys/values.
+
+  This may break if you were previously dependent on `component.id`, `component.metadata.componentId`, or `component.metadata.tableId`:
+
+  - `component.id` is now the on-chain `bytes32` hex representation of the table ID
+  - `component.metadata.componentName` is the table name (e.g. `Position`)
+  - `component.metadata.tableName` is the namespaced table name (e.g. `myworld:Position`)
+  - `component.metadata.keySchema` is an object with key names and their corresponding ABI types
+  - `component.metadata.valueSchema` is an object with field names and their corresponding ABI types
+
+- Updated dependencies [[`168a4cb4`](https://github.com/latticexyz/mud/commit/168a4cb43ce4f7bfbdb7b1b9d4c305b912a0d3f2), [`c963b46c`](https://github.com/latticexyz/mud/commit/c963b46c7eaceebc652930936643365b8c48a021), [`e259ef79`](https://github.com/latticexyz/mud/commit/e259ef79f4d9026353176d0f74628cae50c2f69b), [`afdba793`](https://github.com/latticexyz/mud/commit/afdba793fd84abf17eef5ef59dd56fabe353c8bd)]:
+  - @latticexyz/cli@2.0.0-next.1
+  - @latticexyz/store@2.0.0-next.1
+  - @latticexyz/recs@2.0.0-next.1
+  - @latticexyz/network@2.0.0-next.1
+  - @latticexyz/store-cache@2.0.0-next.1
+  - @latticexyz/world@2.0.0-next.1
+  - @latticexyz/common@2.0.0-next.1
+  - @latticexyz/config@2.0.0-next.1
+  - @latticexyz/utils@2.0.0-next.1
+  - @latticexyz/solecs@2.0.0-next.1
+
 ## 2.0.0-next.0
 
 ### Patch Changes
