@@ -42,6 +42,7 @@ package main
 
 import (
 	"flag"
+	"github.com/joho/godotenv"
 	"math/big"
 	"time"
 
@@ -68,8 +69,12 @@ var (
 )
 
 func main() {
-	// Parse command line flags.
-	flag.Parse()
+	err := godotenv.Load()
+	if err != nil {
+		//log.Fatalf("err loading: %v", err)
+	}
+
+	// get
 
 	// Setup logging.
 	logger.InitLogger()
