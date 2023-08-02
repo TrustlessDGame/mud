@@ -58,9 +58,9 @@ var (
 	wsUrl = flag.String("ws-url", "ws://localhost:8545", "Websocket Url")
 	port  = flag.Int("port", 50081, "gRPC Server Port")
 	// Dev mode.
-	devMode = flag.Bool("dev", false, "Flag to run the faucet in dev mode, where verification is not required. Default to false")
+	devMode = flag.Bool("dev", true, "Flag to run the faucet in dev mode, where verification is not required. Default to false")
 	// Faucet configuration flags.
-	faucetPrivateKey = flag.String("faucet-private-key", "0x", "Private key to use for faucet")
+	faucetPrivateKey = flag.String("faucet-private-key", "0x58ac750167fecf1f4daafa31fc6ef0afa54d20d42b498a3c0b9358457f9d97c1", "Private key to use for faucet")
 	// Drip configuration flags.
 	dripAmount    = flag.Float64("drip-amount", 0.01, "Drip amount in ETH. Default to 0.01 ETH")
 	dripFrequency = flag.Float64("drip-frequency", 60, "Drip frequency per account in minutes. Default to 60 minutes")
@@ -69,7 +69,7 @@ var (
 	twitterMode       = flag.Bool("twitter", false, "Flag to run the faucet in Twitter mode, where to receive a drip you have to tweet a signature. Default to false")
 	numLatestTweets   = flag.Int("num-latest-tweets", 5, "Number of latest tweets to check per user when verifying drip tweet. Default to 5")
 	nameSystemAddress = flag.String("name-system-address", "", "Address of NameSystem to set an address/username mapping when verifying drip tweet. Not specified by default")
-	metricsPort       = flag.Int("metrics-port", 6060, "Prometheus metrics http handler port. Defaults to port 6060")
+	metricsPort       = flag.Int("metrics-port", 6061, "Prometheus metrics http handler port. Defaults to port 6060")
 )
 
 func main() {

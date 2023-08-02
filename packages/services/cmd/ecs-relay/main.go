@@ -61,7 +61,7 @@ var (
 	verifyAccountBalance   = flag.Bool("verify-account-balance", false, "Whether to service-side verify that the account has sufficient balance when relaying message. Defaults to false")
 	verifyDataSize         = flag.Bool("verify-data-size", false, "Whether to service-side verify that size of the data of messages doesn't surpass max-data-size. Defaults to false")
 	messageRateLimit       = flag.Int("msg-rate-limit", 10, "Rate limit for messages per second that a single client can push to be relayed. Defaults to 10")
-	metricsPort            = flag.Int("metrics-port", 6060, "Prometheus metrics http handler port. Defaults to port 6060")
+	metricsPort            = flag.Int("metrics-port", 6063, "Prometheus metrics http handler port. Defaults to port 6060")
 )
 
 func main() {

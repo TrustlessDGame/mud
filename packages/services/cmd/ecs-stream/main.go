@@ -39,7 +39,7 @@ import (
 var (
 	wsUrl       = flag.String("ws-url", "ws://localhost:8545", "Websocket Url")
 	port        = flag.Int("port", 50051, "gRPC Server Port")
-	metricsPort = flag.Int("metrics-port", 6060, "Prometheus metrics http handler port. Defaults to port 6060")
+	metricsPort = flag.Int("metrics-port", 6062, "Prometheus metrics http handler port. Defaults to port 6060")
 )
 
 func main() {

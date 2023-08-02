@@ -57,7 +57,7 @@ import (
 var (
 	wsUrl                            = flag.String("ws-url", "ws://localhost:8545", "Websocket Url")
 	port                             = flag.Int("port", 50061, "gRPC Server Port")
-	worldAddresses                   = flag.String("worldAddresses", "", "List of world addresses to index ECS state for. Defaults to empty string which will listen for all world events from all addresses")
+	worldAddresses                   = flag.String("worldAddresses", "0xD84379CEae14AA33C123Af12424A37803F885889", "List of world addresses to index ECS state for. Defaults to empty string which will listen for all world events from all addresses")
 	block                            = flag.Int64("block", 0, "Block to start taking snapshots from. Defaults to 0")
 	snapshotBlockInterval            = flag.Int64("snapshot-block-interval", 100, "Block number interval for how often to take regular snapshots")
 	initialSyncBlockBatchSize        = flag.Int64("initial-sync-block-batch-size", 10, "Number of blocks to fetch data for when performing an initial sync")

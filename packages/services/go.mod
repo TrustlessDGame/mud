@@ -11,6 +11,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/improbable-eng/grpc-web v0.15.0
 	github.com/keith-turner/ecoji v1.0.0
+	github.com/prometheus/client_golang v1.7.1
 	go.uber.org/zap v1.22.0
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
@@ -37,7 +38,6 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/klauspost/compress v1.11.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/prometheus/client_golang v1.7.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.15.0 // indirect
 	github.com/prometheus/procfs v0.3.0 // indirect
