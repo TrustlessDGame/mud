@@ -66,7 +66,7 @@ func main() {
 
 	var (
 		wsUrl                  = os.Getenv(Createkey("ws-url"))                   // "Websocket Url"
-		port                   = os.Getenv(Createkey("port"))                     //"gRPC Server Port"
+		port                   = os.Getenv(Createkey("relay_port"))               //"gRPC Server Port"
 		idleTimeoutTime        = os.Getenv(Createkey("idle_timeout_time"))        // 30, "Time in seconds after which a client connection times out. Defaults to 30s"
 		idleDisconnectInterval = os.Getenv(Createkey("idle-disconnect-interval")) // 60, "Time in seconds for how often to disconnect idle clients. Defaults to 60s")
 		messageDriftTime       = os.Getenv(Createkey("message-drift-time"))       // 5, "Time in seconds that is acceptable as drift before message is not relayed. Defaults to 5s")
@@ -76,7 +76,7 @@ func main() {
 		verifyAccountBalance   = os.Getenv(Createkey("verify-account-balance"))   // false, "Whether to service-side verify that the account has sufficient balance when relaying message. Defaults to false")
 		verifyDataSize         = os.Getenv(Createkey("verify-data-size"))         // false "Whether to service-side verify that size of the data of messages doesn't surpass max-data-size. Defaults to false")
 		messageRateLimit       = os.Getenv(Createkey("msg-rate-limit"))           //, 10, "Rate limit for messages per second that a single client can push to be relayed. Defaults to 10")
-		metricsPort            = os.Getenv(Createkey("metrics-port"))             //, 6063, "Prometheus metrics http handler port. Defaults to port 6060")
+		metricsPort            = os.Getenv(Createkey("relay-metrics-port"))       //, 6063, "Prometheus metrics http handler port. Defaults to port 6060")
 	)
 
 	// Setup logging.

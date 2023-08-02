@@ -27,7 +27,11 @@ The flags are:
 package main
 
 import (
-	"flag"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
+	"strconv"
+	"strings"
 
 	eth "latticexyz/mud/packages/services/pkg/eth"
 	grpc "latticexyz/mud/packages/services/pkg/grpc"
@@ -36,15 +40,26 @@ import (
 	"latticexyz/mud/packages/services/pkg/stream"
 )
 
-var (
-	wsUrl       = flag.String("ws-url", "ws://localhost:8545", "Websocket Url")
-	port        = flag.Int("port", 50051, "gRPC Server Port")
-	metricsPort = flag.Int("metrics-port", 6062, "Prometheus metrics http handler port. Defaults to port 6060")
-)
+func Createkey(str string) string {
+	t := strings.ToUpper(strings.ReplaceAll(str, "-", "_"))
+	return t
+}
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("err loading: %v", err)
+	}
+
 	// Parse command line flags.
-	flag.Parse()
+	var (
+		wsUrl       = os.Getenv(Createkey("ws-url"))       //, "ws://localhost:8545", "Websocket Url")
+		port        = os.Getenv(Createkey("stream-port"))  //, 50051, "gRPC Server Port")
+		metricsPort = os.Getenv(Createkey("metrics-port")) //, 6062, "Prometheus metrics http handler port. Defaults to port 6060")
+	)
+
+	portInt, _ := strconv.Atoi(port)
+	metricsPortInt, _ := strconv.Atoi(metricsPort)
 
 	// Setup logging.
 	logger.InitLogger()
@@ -52,14 +67,14 @@ func main() {
 	defer logger.Sync()
 
 	// Get an instance of ethereum client.
-	ethclient := eth.GetEthereumClient(*wsUrl, logger)
+	ethclient := eth.GetEthereumClient(wsUrl, logger)
 
 	// Get an instance of a multiplexer that will use channels to make data available.
 	multiplexer := multiplexer.NewMultiplexer()
 	go multiplexer.Start()
 
 	// Start the gRPC server and pass in the channel that the server can receive piped data from.
-	go grpc.StartStreamServer(*port, *metricsPort, ethclient, multiplexer, logger)
+	go grpc.StartStreamServer(portInt, metricsPortInt, ethclient, multiplexer, logger)
 
 	// Start the service (which will subscribe to the ethereum client data). Pass in the channel
 	// that the service will use to pipe the data.

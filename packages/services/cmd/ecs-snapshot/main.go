@@ -41,9 +41,12 @@ The flags are:
 package main
 
 import (
-	"flag"
 	"github.com/joho/godotenv"
+	"log"
 	"math/big"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -55,60 +58,72 @@ import (
 	"latticexyz/mud/packages/services/pkg/utils"
 )
 
-var (
-	wsUrl                            = flag.String("ws-url", "ws://localhost:8545", "Websocket Url")
-	port                             = flag.Int("port", 50061, "gRPC Server Port")
-	worldAddresses                   = flag.String("worldAddresses", "0xD84379CEae14AA33C123Af12424A37803F885889", "List of world addresses to index ECS state for. Defaults to empty string which will listen for all world events from all addresses")
-	block                            = flag.Int64("block", 0, "Block to start taking snapshots from. Defaults to 0")
-	snapshotBlockInterval            = flag.Int64("snapshot-block-interval", 100, "Block number interval for how often to take regular snapshots")
-	initialSyncBlockBatchSize        = flag.Int64("initial-sync-block-batch-size", 10, "Number of blocks to fetch data for when performing an initial sync")
-	initialSyncBlockBatchSyncTimeout = flag.Int64("initial-sync-block-batch-sync-timeout", 100, "Time in milliseconds to wait between calls to fetch batched log data when performing an initial sync")
-	initialSyncSnapshotInterval      = flag.Int64("initial-sync-snapshot-interval", 5000, "Block number interval for how often to take intermediary snapshots when performing an initial sync")
-	defaultSnapshotChunkPercentage   = flag.Int("default-snapshot-chunk-percentage", 10, "Default percentage for RPCs that request a snapshot in chunks. Default to 10, i.e. 10 percent chunks")
-	metricsPort                      = flag.Int("metrics-port", 6060, "Prometheus metrics http handler port. Defaults to port 6060")
-)
+func Createkey(str string) string {
+	t := strings.ToUpper(strings.ReplaceAll(str, "-", "_"))
+	return t
+}
 
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		//log.Fatalf("err loading: %v", err)
+		log.Fatalf("err loading: %v", err)
 	}
 
-	// get
+	var (
+		wsUrl                            = os.Getenv(Createkey("ws-url"))                                //, "Websocket Url")
+		port                             = os.Getenv(Createkey("snapshot-port"))                         //, 50061, "gRPC Server Port")
+		worldAddresses                   = os.Getenv(Createkey("world-addresses"))                       //, "0xD84379CEae14AA33C123Af12424A37803F885889", "List of world addresses to index ECS state for. Defaults to empty string which will listen for all world events from all addresses")
+		block                            = os.Getenv(Createkey("block"))                                 //, 0, "Block to start taking snapshots from. Defaults to 0")
+		snapshotBlockInterval            = os.Getenv(Createkey("snapshot-block-interval"))               //, 100, "Block number interval for how often to take regular snapshots")
+		initialSyncBlockBatchSize        = os.Getenv(Createkey("initial-sync-block-batch-size"))         //, 10, "Number of blocks to fetch data for when performing an initial sync")
+		initialSyncBlockBatchSyncTimeout = os.Getenv(Createkey("initial-sync-block-batch-sync-timeout")) //, 100, "Time in milliseconds to wait between calls to fetch batched log data when performing an initial sync")
+		initialSyncSnapshotInterval      = os.Getenv(Createkey("initial-sync-snapshot-interval"))        //, 5000, "Block number interval for how often to take intermediary snapshots when performing an initial sync")
+		defaultSnapshotChunkPercentage   = os.Getenv(Createkey("default-snapshot-chunk-percentage"))     //, 10, "Default percentage for RPCs that request a snapshot in chunks. Default to 10, i.e. 10 percent chunks")
+		metricsPort                      = os.Getenv(Createkey("snapshot-metrics-port"))                 // 6060)                    //, "Prometheus metrics http handler port. Defaults to port 6060")
+	)
 
 	// Setup logging.
 	logger.InitLogger()
 	logger := logger.GetLogger()
 	defer logger.Sync()
 
+	snapshotBlockIntervalInt64, _ := strconv.Atoi(snapshotBlockInterval)
+	initialSyncBlockBatchSizeInt64, _ := strconv.Atoi(initialSyncBlockBatchSize)
+	initialSyncBlockBatchSyncTimeoutInt, _ := strconv.Atoi(initialSyncBlockBatchSyncTimeout)
+	initialSyncSnapshotIntervalInt, _ := strconv.Atoi(initialSyncSnapshotInterval)
+	defaultSnapshotChunkPercentageInt, _ := strconv.Atoi(defaultSnapshotChunkPercentage)
+	portInt, _ := strconv.Atoi(port)
+	metricsPortInt, _ := strconv.Atoi(metricsPort)
+	blockInt, _ := strconv.Atoi(block)
+
 	// Build a config.
 	config := &snapshot.SnapshotServerConfig{
-		SnapshotBlockInterval:            *snapshotBlockInterval,
-		InitialSyncBlockBatchSize:        *initialSyncBlockBatchSize,
-		InitialSyncBlockBatchSyncTimeout: time.Duration(*initialSyncBlockBatchSyncTimeout) * time.Millisecond,
-		InitialSyncSnapshotInterval:      *initialSyncSnapshotInterval,
-		DefaultSnapshotChunkPercentage:   *defaultSnapshotChunkPercentage,
+		SnapshotBlockInterval:            int64(snapshotBlockIntervalInt64),
+		InitialSyncBlockBatchSize:        int64(initialSyncBlockBatchSizeInt64),
+		InitialSyncBlockBatchSyncTimeout: time.Duration(initialSyncBlockBatchSyncTimeoutInt) * time.Millisecond,
+		InitialSyncSnapshotInterval:      int64(initialSyncSnapshotIntervalInt),
+		DefaultSnapshotChunkPercentage:   defaultSnapshotChunkPercentageInt,
 	}
 
 	// Parse world addresses to listen to.
-	worlds := utils.SplitAddressList(*worldAddresses, ",")
+	worlds := utils.SplitAddressList(worldAddresses, ",")
 	if len(worlds) == 0 {
 		logger.Info("listening for events from all world addresses")
 	} else {
-		logger.Info("listening for events from specific addresses", zap.String("worldAddresses", *worldAddresses))
+		logger.Info("listening for events from specific addresses", zap.String("worldAddresses", worldAddresses))
 	}
 
 	// Get an instance of ethereum client.
-	ethclient := eth.GetEthereumClient(*wsUrl, logger)
+	ethclient := eth.GetEthereumClient(wsUrl, logger)
 
 	// Start gRPC server.
-	go grpc.StartSnapshotServer(*port, *metricsPort, config, logger)
+	go grpc.StartSnapshotServer(portInt, metricsPortInt, config, logger)
 
 	// 1. Prepare for service to run.
 	utils.EnsureDir(snapshot.SnapshotDir)
 
 	// 2. Kick off the service to catch up on state up to the current block number.
-	fromBlock := big.NewInt(*block)
+	fromBlock := big.NewInt(int64(blockInt))
 	toBlock := eth.GetCurrentBlockHead(ethclient)
 
 	initialState := snapshot.Sync(ethclient, fromBlock, toBlock, worlds, config)

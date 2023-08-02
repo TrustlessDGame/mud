@@ -38,8 +38,11 @@ package main
 import (
 	"context"
 	"crypto/ecdsa"
-	"flag"
+	"github.com/joho/godotenv"
+	"log"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"latticexyz/mud/packages/services/pkg/eth"
@@ -53,43 +56,60 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-var (
-	// General flags.
-	wsUrl = flag.String("ws-url", "ws://localhost:8545", "Websocket Url")
-	port  = flag.Int("port", 50081, "gRPC Server Port")
-	// Dev mode.
-	devMode = flag.Bool("dev", true, "Flag to run the faucet in dev mode, where verification is not required. Default to false")
-	// Faucet configuration flags.
-	faucetPrivateKey = flag.String("faucet-private-key", "0x58ac750167fecf1f4daafa31fc6ef0afa54d20d42b498a3c0b9358457f9d97c1", "Private key to use for faucet")
-	// Drip configuration flags.
-	dripAmount    = flag.Float64("drip-amount", 0.01, "Drip amount in ETH. Default to 0.01 ETH")
-	dripFrequency = flag.Float64("drip-frequency", 60, "Drip frequency per account in minutes. Default to 60 minutes")
-	dripLimit     = flag.Float64("drip-limit", 1, "Drip limit in ETH per drip frequency interval. Default to 1 ETH")
-	// Flags for using twitter to verify drip requests.
-	twitterMode       = flag.Bool("twitter", false, "Flag to run the faucet in Twitter mode, where to receive a drip you have to tweet a signature. Default to false")
-	numLatestTweets   = flag.Int("num-latest-tweets", 5, "Number of latest tweets to check per user when verifying drip tweet. Default to 5")
-	nameSystemAddress = flag.String("name-system-address", "", "Address of NameSystem to set an address/username mapping when verifying drip tweet. Not specified by default")
-	metricsPort       = flag.Int("metrics-port", 6061, "Prometheus metrics http handler port. Defaults to port 6060")
-)
+func Createkey(str string) string {
+	t := strings.ToUpper(strings.ReplaceAll(str, "-", "_"))
+	return t
+}
 
 func main() {
-	// Parse command line flags.
-	flag.Parse()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("err loading: %v", err)
+	}
+
+	var (
+		// General flags.
+		wsUrl = os.Getenv(Createkey("ws-url"))      //, "ws://localhost:8545", "Websocket Url")
+		port  = os.Getenv(Createkey("faucet-port")) //, 50081, "gRPC Server Port")
+		// Dev mode.
+		devMode = os.Getenv(Createkey("dev")) //,  //true,)  "Flag to run the faucet in dev mode, where verification is not required. Default to false")
+		// Faucet configuration flags.
+		faucetPrivateKey = os.Getenv(Createkey("faucet-private-key")) //, "0x58ac750167fecf1f4daafa31fc6ef0afa54d20d42b498a3c0b9358457f9d97c1", "Private key to use for faucet")
+		// Drip configuration flags.
+		dripAmount    = os.Getenv(Createkey("drip-amount"))    //, 0.01, "Drip amount in ETH. Default to 0.01 ETH")
+		dripFrequency = os.Getenv(Createkey("drip-frequency")) //, 60, "Drip frequency per account in minutes. Default to 60 minutes")
+		dripLimit     = os.Getenv(Createkey("drip-limit"))     //, 1, "Drip limit in ETH per drip frequency interval. Default to 1 ETH")
+		// Flags for using twitter to verify drip requests.
+		twitterMode       = os.Getenv(Createkey("twitter"))             //, false, "Flag to run the faucet in Twitter mode, where to receive a drip you have to tweet a signature. Default to false")
+		numLatestTweets   = os.Getenv(Createkey("num-latest-tweets"))   //, 5, "Number of latest tweets to check per user when verifying drip tweet. Default to 5")
+		nameSystemAddress = os.Getenv(Createkey("name-system-address")) //, "", "Address of NameSystem to set an address/username mapping when verifying drip tweet. Not specified by default")
+		metricsPort       = os.Getenv(Createkey("metrics-port"))        //, 6061, "Prometheus metrics http handler port. Defaults to port 6060")
+	)
 
 	// Setup logging.
 	logger.InitLogger()
 	logger := logger.GetLogger()
 	defer logger.Sync()
 
+	dripAmountF, _ := strconv.ParseFloat(dripAmount, 10)
+	dripFrequencyF, _ := strconv.ParseFloat(dripFrequency, 10)
+	dripLimitF, _ := strconv.ParseFloat(dripLimit, 10)
+	devModeBool, _ := strconv.ParseBool(devMode)
+	twitterModeBool, _ := strconv.ParseBool(twitterMode)
+	numLatestTweetsInt, _ := strconv.Atoi(numLatestTweets)
+	dripFrequencyInt, _ := strconv.Atoi(dripFrequency)
+	portInt, _ := strconv.Atoi(port)
+	metricsPortInt, _ := strconv.Atoi(metricsPort)
+
 	// Create a drip config.
 	dripConfig := &faucet.DripConfig{
-		DripAmount:               *dripAmount,
-		DripFrequency:            *dripFrequency,
-		DripLimit:                *dripLimit,
-		DevMode:                  *devMode,
-		TwitterMode:              *twitterMode,
-		NumLatestTweetsForVerify: *numLatestTweets,
-		NameSystemAddress:        *nameSystemAddress,
+		DripAmount:               float64(dripAmountF),
+		DripFrequency:            float64(dripFrequencyF),
+		DripLimit:                float64(dripLimitF),
+		DevMode:                  devModeBool,
+		TwitterMode:              twitterModeBool,
+		NumLatestTweetsForVerify: numLatestTweetsInt,
+		NameSystemAddress:        nameSystemAddress,
 	}
 	logger.Info("using a drip configuration",
 		zap.Float64("amount", dripConfig.DripAmount),
@@ -113,12 +133,12 @@ func main() {
 	twitterClient := twitter.NewClient(config.Client(context.Background()))
 
 	// Get an instance of ethereum client.
-	ethClient := eth.GetEthereumClient(*wsUrl, logger)
+	ethClient := eth.GetEthereumClient(wsUrl, logger)
 
 	// Create a private key ECDSA object.
-	privateKey, err := crypto.HexToECDSA(*faucetPrivateKey)
+	privateKey, err := crypto.HexToECDSA(faucetPrivateKey)
 	if err != nil {
-		logger.Fatal("error creating ECDSA object from private key string", zap.String("privateKey", *faucetPrivateKey))
+		logger.Fatal("error creating ECDSA object from private key string", zap.String("privateKey", faucetPrivateKey))
 	}
 
 	publicKey, ok := privateKey.Public().(*ecdsa.PublicKey)
@@ -128,8 +148,8 @@ func main() {
 
 	// Kick off a worked that will reset the faucet limit at the specified interval.
 	// Note: the duration here matches whatever time units are used in 'drip-frequency'.
-	go faucet.ReplenishFaucetWorker(time.NewTicker(time.Duration(*dripFrequency)*time.Minute), make(chan struct{}))
+	go faucet.ReplenishFaucetWorker(time.NewTicker(time.Duration(dripFrequencyInt)*time.Minute), make(chan struct{}))
 
 	// Start the faucet gRPC server.
-	grpc.StartFaucetServer(*port, *metricsPort, twitterClient, ethClient, privateKey, publicKey, dripConfig, logger)
+	grpc.StartFaucetServer(portInt, metricsPortInt, twitterClient, ethClient, privateKey, publicKey, dripConfig, logger)
 }
